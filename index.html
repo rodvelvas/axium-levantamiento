@@ -49,7 +49,6 @@
     .actions .btn{flex:1 1 100%;}
     .media-btns .btn{flex:1 1 100%; text-align:center;}
     .progress-wrap{padding:8px 14px;}
-    .firma-canvas{height:140px;}
   }
   /* Escritorio: mejor uso del ancho */
   @media(min-width:900px){
@@ -73,10 +72,32 @@
   .progress-bar>div{height:100%; background:var(--azul2); width:0; transition:width .25s;}
   .progress-wrap span{font-size:12px; color:var(--suave); white-space:nowrap; font-weight:600;}
   .pdf-mode .no-print{display:none!important;}
+  .pdf-mode .card, .pdf-mode .row{break-inside:avoid; page-break-inside:avoid;}
+  .val-rojo{color:var(--rojo)!important; font-style:italic; font-weight:600;}
+  .pdf-preview-ov{position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:100;
+    display:flex; align-items:center; justify-content:center; padding:14px;}
+  .pdf-preview-box{background:#fff; border-radius:10px; width:100%; max-width:820px; height:92vh;
+    display:flex; flex-direction:column; overflow:hidden;}
+  .pdf-preview-head{display:flex; align-items:center; gap:10px; padding:12px 16px;
+    border-bottom:1px solid var(--linea); font-size:14px; font-weight:700; color:var(--azul);}
+  .pdf-preview-box iframe{flex:1; width:100%; border:none; background:#525659;}
+  .pdf-preview-actions{display:flex; gap:10px; justify-content:flex-end; padding:12px 16px; border-top:1px solid var(--linea);}
+  /* Wizard móvil: una sección por página */
+  .wizard-nav{display:none;}
+  body.wizard-on{padding-bottom:68px;}
+  body.wizard-on .wrap > .card{display:none;}
+  body.wizard-on .wrap > .card.wstep-active{display:block;}
+  body.wizard-on .actions, body.wizard-on .saved{display:none;}
+  .wizard-nav{position:fixed; bottom:0; left:0; right:0; background:#fff;
+    border-top:1px solid var(--linea); padding:9px 14px; gap:10px; align-items:center;
+    z-index:30; box-shadow:0 -2px 8px rgba(0,0,0,.07);}
+  body.wizard-on .wizard-nav{display:flex;}
+  .wizard-nav .wstep-count{flex:1; text-align:center; font-size:12px; color:var(--suave); font-weight:700;}
+  .wizard-nav .btn{min-width:118px;}
+  @media print{ .wizard-nav{display:none!important;} }
+  @media print{ .card, .row{break-inside:avoid; page-break-inside:avoid;} }
   .saved{font-size:12px; color:var(--verde); text-align:center; min-height:16px; margin-bottom:8px;}
   .req{color:var(--rojo);}
-  .firma-canvas{width:100%; height:160px; border:1px dashed var(--linea); border-radius:6px;
-    background:#fff; touch-action:none; display:block; cursor:crosshair;}
   .media-btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:4px;}
   .media-grid{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;}
   .media-item{position:relative;}
@@ -118,13 +139,12 @@
   <div class="card">
     <h2><span class="n">1</span> Identificación del servicio</h2>
     <div class="row c3">
+      <div><label>Nombre de quien toma los datos</label><input name="tecnico" placeholder="Nombre"></div>
       <div><label>Cliente</label><input name="cliente" placeholder="Ej: Enel / Andritz"></div>
       <div><label>Faena / Central</label><input name="faena" placeholder="Ej: Central Ralco"></div>
-      <div><label>N° presupuesto / OT</label><input name="nppto" placeholder="Ej: 37"></div>
     </div>
-    <div class="row c3">
+    <div class="row c2">
       <div><label>Fecha de visita</label><input type="date" name="fecha"></div>
-      <div><label>Técnico que releva</label><input name="tecnico" placeholder="Nombre"></div>
       <div>
         <label>Región</label>
         <select name="region">
@@ -160,20 +180,18 @@
   <!-- 2. Equipo a intervenir -->
   <div class="card">
     <h2><span class="n">2</span> Equipo / componente a intervenir</h2>
-    <div class="row c2">
-      <div>
-        <label>Tipo de trabajo</label>
-        <select name="tipoTrabajo">
-          <option value="">— Selecciona —</option>
-          <option>Barrenado / mandrinado en línea</option>
-          <option>Corte de álabe</option>
-          <option>Refrentado de caras / flanges</option>
-          <option>Torneado en terreno</option>
-          <option>Soldadura orbital / bore welding</option>
-          <option>Roscado / fresado</option>
-          <option>Otro (describir en observaciones)</option>
-        </select>
-      </div>
+    <div class="subhdr">Tipo de trabajo (puedes marcar varios) <span class="req">*</span></div>
+    <div class="chkgrid">
+      <label class="chk"><input type="checkbox" name="ttBarrenado"> Barrenado</label>
+      <label class="chk"><input type="checkbox" name="ttRelleno"> Relleno soldadura</label>
+      <label class="chk"><input type="checkbox" name="ttFresado"> Fresado</label>
+      <label class="chk"><input type="checkbox" name="ttTorneado"> Torneado de eje</label>
+      <label class="chk"><input type="checkbox" name="ttChavetero"> Canal chavetero</label>
+      <label class="chk"><input type="checkbox" name="ttRefrentado"> Refrentado de flange</label>
+      <label class="chk"><input type="checkbox" name="ttOtro"> Otro (especificar)</label>
+    </div>
+    <div class="row c2" style="margin-top:10px">
+      <div><label>Si marcaste "Otro", especifica</label><input name="ttOtroDetalle" placeholder="Describe el tipo de trabajo"></div>
       <div><label>Equipo / componente</label><input name="componente" placeholder="Ej: Eje turbina, acople, álabe móvil"></div>
     </div>
     <div class="row c3">
@@ -198,18 +216,10 @@
   <!-- 3. Mediciones -->
   <div class="card">
     <h2><span class="n">3</span> Mediciones y parámetros técnicos</h2>
-    <p class="hint">Tomar las dimensiones críticas para seleccionar el equipo y rango de mecanizado.</p>
-    <div class="row c3">
-      <div><label>Diámetro a mecanizar</label><input name="diametro" placeholder='Ej: 12"'></div>
-      <div><label>Rango / largo de trabajo</label><input name="rango" placeholder='Ej: 2-1/4" a 19"'></div>
-      <div><label>Tolerancia requerida</label><input name="tolerancia" placeholder="Ej: ±0,05 mm"></div>
-    </div>
-    <div class="row c3">
-      <div><label>N° de puntos / piezas</label><input name="puntos" placeholder="Ej: 4 perforaciones"></div>
-      <div><label>Profundidad / espesor</label><input name="profundidad" placeholder="Ej: 300 mm"></div>
-      <div><label>Acabado superficial</label><input name="acabado" placeholder="Ej: Ra 3.2"></div>
-    </div>
-    <div class="row"><div><label>Otras mediciones / croquis</label><textarea name="medicionesObs" placeholder="Detalle de mediciones, croquis, referencias…"></textarea></div></div>
+    <div class="row"><div>
+      <label>Dimensiones relevantes</label>
+      <textarea name="medicionesObs" style="min-height:140px" placeholder="Indica las dimensiones más relevantes como diámetros, largos, anchos o profundidad que estimes conveniente."></textarea>
+    </div></div>
   </div>
 
   <!-- 4. Acceso y movilización -->
@@ -225,9 +235,6 @@
       <label class="chk"><input type="checkbox" name="reqAvion"> Pasajes aéreos</label>
       <label class="chk"><input type="checkbox" name="reqBus"> Bus / transfer personal</label>
       <label class="chk"><input type="checkbox" name="reqCamioneta"> Camioneta en faena</label>
-      <label class="chk"><input type="checkbox" name="reqFlete"> Flete de equipos / herramientas</label>
-      <label class="chk"><input type="checkbox" name="reqGrua"> Grúa / izaje para equipos</label>
-      <label class="chk"><input type="checkbox" name="reqAndamio"> Andamios / carpas</label>
     </div>
   </div>
 
@@ -345,9 +352,9 @@
     <div id="videoList" class="media-grid"></div>
   </div>
 
-  <!-- 10. Cierre y firma -->
+  <!-- 10. Cierre -->
   <div class="card">
-    <h2><span class="n">10</span> Cierre y firma</h2>
+    <h2><span class="n">10</span> Cierre</h2>
     <div class="row c2">
       <div>
         <label>Sello del levantamiento (fecha · hora · GPS)</label>
@@ -362,29 +369,19 @@
       <div><label>Próximos pasos / pendientes</label><input name="pendientes" placeholder="Ej: enviar planos, confirmar fecha"></div>
       <div></div>
     </div>
-    <div class="row c2">
-      <div>
-        <label>Firma del técnico</label>
-        <canvas id="firmaTecnico" class="firma-canvas"></canvas>
-        <button type="button" class="btn btn-ghost no-print" style="margin-top:6px" onclick="limpiarFirma('firmaTecnico')">Borrar firma</button>
-      </div>
-      <div>
-        <label>Conformidad del cliente (firma)</label>
-        <canvas id="firmaCliente" class="firma-canvas"></canvas>
-        <button type="button" class="btn btn-ghost no-print" style="margin-top:6px" onclick="limpiarFirma('firmaCliente')">Borrar firma</button>
-      </div>
-    </div>
   </div>
 
   <div class="saved no-print" id="savedMsg"></div>
   <div class="actions no-print">
     <button class="btn btn-primary" onclick="descargarPDF()">📄 Descargar PDF (para correo)</button>
-    <button class="btn btn-ghost" onclick="window.print()">🖨 Imprimir</button>
-    <button class="btn btn-ghost" onclick="exportarDatos()">⬇️ Datos para cotizador</button>
-    <button class="btn btn-ghost" onclick="compartir()">📤 Compartir</button>
-    <button class="btn btn-danger" onclick="reiniciar()">🗑 Reiniciar</button>
   </div>
 
+</div>
+
+<div class="wizard-nav no-print" id="wizardNav">
+  <button class="btn btn-ghost" id="wzPrev" onclick="wzStep(-1)">← Anterior</button>
+  <span class="wstep-count" id="wzCount">Sección 1</span>
+  <button class="btn btn-primary" id="wzNext" onclick="wzStep(1)">Siguiente →</button>
 </div>
 
 <script>
@@ -408,7 +405,6 @@ function load(){
 function reiniciar(){
   if(!confirm("¿Borrar todo el formulario (incluidas las fotos)?")) return;
   localStorage.removeItem(KEY); localStorage.removeItem(MEDIA_KEY);
-  localStorage.removeItem("levantamiento_axium_firmaTec"); localStorage.removeItem("levantamiento_axium_firmaCli");
   location.reload();
 }
 
@@ -484,10 +480,41 @@ function copiarResumen(){
     clearTimeout(window._st); window._st=setTimeout(()=>m.textContent="",2000);
   }).catch(()=>{ alert(t); });
 }
-function compartir(){
-  const t=generarTexto();
-  if(navigator.share){ navigator.share({title:"Levantamiento técnico AXIUM", text:t}).catch(()=>{}); }
-  else { copiarResumen(); alert("Compartir nativo no disponible en este navegador; el resumen se copió al portapapeles."); }
+async function compartir(){
+  const m=document.getElementById('savedMsg');
+  // Sin librería de PDF (offline): comparte texto
+  if(typeof html2pdf==='undefined'){
+    const t=generarTexto();
+    if(navigator.share){ navigator.share({title:"Levantamiento técnico AXIUM", text:t}).catch(()=>{}); }
+    else { copiarResumen(); alert("Compartir no disponible aquí; el resumen se copió al portapapeles."); }
+    return;
+  }
+  const falt=faltantes();
+  if(falt.length && !confirm("Faltan "+falt.length+" campo(s) obligatorio(s). ¿Compartir de todas formas?")) return;
+  const cli=(((document.querySelector('[name=cliente]')||{}).value)||'levantamiento').replace(/[^\w]+/g,'_');
+  const fname="Levantamiento_"+cli+".pdf";
+  m.textContent="📄 Preparando PDF para compartir…";
+  document.body.classList.add('pdf-mode'); marcarVacios(true);
+  const opt={margin:8, image:{type:'jpeg',quality:0.9}, html2canvas:{scale:2, useCORS:true},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css','legacy']}};
+  try{
+    const blob = await html2pdf().set(opt).from(document.body).outputPdf('blob');
+    marcarVacios(false); document.body.classList.remove('pdf-mode');
+    const file = new File([blob], fname, {type:'application/pdf'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:"Levantamiento técnico AXIUM",
+        text:"Levantamiento técnico en terreno — AXIUM"});
+      m.textContent="✓ Compartido";
+    } else {
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+      m.textContent="✓ PDF descargado";
+      alert("Tu navegador no permite compartir archivos directamente, así que descargué el PDF. Adjúntalo por WhatsApp o correo.");
+    }
+  }catch(e){
+    marcarVacios(false); document.body.classList.remove('pdf-mode'); m.textContent="";
+  }
+  clearTimeout(window._st); window._st=setTimeout(()=>{ if(m) m.textContent=""; },2500);
 }
 
 /* ===== Ubicación GPS ===== */
@@ -509,32 +536,6 @@ function updateGpsLink(){
   else a.style.display="none";
 }
 
-/* ===== Firmas ===== */
-function initFirma(id, storeKey){
-  const c=document.getElementById(id); if(!c) return;
-  const ctx=c.getContext('2d');
-  let drawing=false;
-  function redraw(){
-    ctx.fillStyle="#fff"; ctx.fillRect(0,0,c.width,c.height);
-    const saved=localStorage.getItem(storeKey);
-    if(saved){ const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,c.width,c.height); img.src=saved; }
-  }
-  function resize(){ c.width=c.clientWidth; c.height=160; redraw(); }
-  function pos(e){ const r=c.getBoundingClientRect(); const t=e.touches?e.touches[0]:e; return {x:t.clientX-r.left, y:t.clientY-r.top}; }
-  function start(e){ drawing=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault(); }
-  function move(e){ if(!drawing)return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.strokeStyle="#1b1f20"; ctx.lineWidth=2; ctx.lineCap="round"; ctx.stroke(); e.preventDefault(); }
-  function end(){ if(!drawing)return; drawing=false; try{ localStorage.setItem(storeKey, c.toDataURL('image/png')); }catch(e){} }
-  c.addEventListener('mousedown',start); c.addEventListener('mousemove',move); window.addEventListener('mouseup',end);
-  c.addEventListener('touchstart',start,{passive:false}); c.addEventListener('touchmove',move,{passive:false}); c.addEventListener('touchend',end);
-  c.dataset.storeKey=storeKey;
-  resize(); window.addEventListener('resize',()=>{ const d=localStorage.getItem(storeKey); resize(); });
-}
-function limpiarFirma(id){
-  const c=document.getElementById(id); if(!c) return;
-  const ctx=c.getContext('2d'); ctx.fillStyle="#fff"; ctx.fillRect(0,0,c.width,c.height);
-  if(c.dataset.storeKey) localStorage.removeItem(c.dataset.storeKey);
-}
-
 /* ===== Progreso y campos obligatorios ===== */
 const REQUIRED = ['cliente','faena','fecha','tecnico','tipoTrabajo','componente','turnos','duracion'];
 function markRequired(){
@@ -544,7 +545,10 @@ function markRequired(){
     if(lbl && !lbl.querySelector('.req')) lbl.insertAdjacentHTML('beforeend',' <span class="req">*</span>');
   });
 }
-function faltantes(){ return REQUIRED.filter(n=>{ const el=document.querySelector(`[name="${n}"]`); return !(el && (el.value||'').trim()); }); }
+function faltantes(){ return REQUIRED.filter(n=>{
+  if(n==='tipoTrabajo'){ return !document.querySelector('[name^="tt"]:checked'); }
+  const el=document.querySelector(`[name="${n}"]`); return !(el && (el.value||'').trim());
+}); }
 function updateProgress(){
   const fill=document.getElementById('progressFill'); if(!fill) return;
   const filled=REQUIRED.length - faltantes().length;
@@ -573,31 +577,121 @@ function exportarDatos(){
   a.remove(); URL.revokeObjectURL(a.href);
 }
 
-/* ===== Descargar PDF (para correo) ===== */
-function descargarPDF(){
-  const falt=faltantes();
-  if(falt.length && !confirm("Faltan "+falt.length+" campo(s) obligatorio(s). ¿Generar el PDF de todas formas?")) return;
-  if(typeof html2pdf==='undefined'){ alert("La generación de PDF necesita conexión a internet. Usa Imprimir como alternativa (Guardar como PDF)."); return; }
-  const cli=(((document.querySelector('[name=cliente]')||{}).value)||'levantamiento').replace(/[^\w]+/g,'_');
-  document.body.classList.add('pdf-mode');
-  const m=document.getElementById('savedMsg'); m.textContent="📄 Generando PDF…";
-  const opt={margin:8, filename:"Levantamiento_"+cli+".pdf",
-    image:{type:'jpeg',quality:0.9}, html2canvas:{scale:2, useCORS:true},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css','legacy','avoid-all']}};
-  html2pdf().set(opt).from(document.body).save()
-    .then(()=>{ document.body.classList.remove('pdf-mode'); m.textContent="✓ PDF descargado"; setTimeout(()=>m.textContent="",2000); })
-    .catch(()=>{ document.body.classList.remove('pdf-mode'); m.textContent=""; alert("No se pudo generar el PDF. Usa Imprimir."); });
+/* ===== Marcar campos vacíos como "No completado" (rojo) para impresión/PDF ===== */
+function marcarVacios(on){
+  document.querySelectorAll('input[name], select[name], textarea[name]').forEach(el=>{
+    if(el.type==='checkbox' || el.type==='file') return;
+    if(on){
+      const vacio = el.tagName==='SELECT' ? el.value==='' : !(el.value||'').trim();
+      if(vacio){
+        el.dataset.vacio='1'; el.classList.add('val-rojo');
+        if(el.tagName==='SELECT'){
+          const o=document.createElement('option'); o.className='tmpvacio'; o.textContent='No completado'; o.selected=true; el.appendChild(o);
+        } else { el.value='No completado'; }
+      }
+    } else if(el.dataset.vacio==='1'){
+      el.classList.remove('val-rojo');
+      if(el.tagName==='SELECT') el.querySelectorAll('.tmpvacio').forEach(o=>o.remove());
+      el.value=''; delete el.dataset.vacio;
+    }
+  });
 }
+
+/* ===== Descargar PDF (para correo) ===== */
+function marcarVaciosClone(doc, vacios){
+  doc.querySelectorAll('.card').forEach(c=>{ c.style.display='block'; });
+  vacios.forEach(name=>{
+    const el=doc.querySelector(`[name="${name}"]`); if(!el) return;
+    el.style.color='#d4564f'; el.style.fontStyle='italic'; el.style.fontWeight='600';
+    if(el.tagName==='SELECT'){ const o=doc.createElement('option'); o.textContent='No completado'; o.selected=true; el.appendChild(o); }
+    else if(el.tagName==='TEXTAREA'){ el.textContent='No completado'; el.value='No completado'; }
+    else { el.setAttribute('value','No completado'); el.value='No completado'; }
+  });
+}
+function descargarPDF(){
+  if(typeof html2pdf==='undefined'){ alert("La generación de PDF necesita conexión a internet."); return; }
+  const falt=faltantes();
+  if(falt.length && !confirm("Faltan "+falt.length+" campo(s) obligatorio(s). ¿Continuar igual? (se marcarán en rojo como 'No completado').")) return;
+  const cli=(((document.querySelector('[name=cliente]')||{}).value)||'levantamiento').replace(/[^\w]+/g,'_');
+  const fname="Levantamiento_"+cli+".pdf";
+  const wiz=document.body.classList.contains('wizard-on');
+  if(wiz) document.body.classList.remove('wizard-on');
+  const vacios=[];
+  document.querySelectorAll('input[name], select[name], textarea[name]').forEach(el=>{
+    if(el.type==='checkbox'||el.type==='file') return;
+    const v = el.tagName==='SELECT' ? el.value==='' : !(el.value||'').trim();
+    if(v) vacios.push(el.name);
+  });
+  const m=document.getElementById('savedMsg'); m.textContent="📄 Generando vista previa…";
+  document.body.classList.add('pdf-mode');
+  const opt={margin:8, filename:fname, image:{type:'jpeg',quality:0.92},
+    html2canvas:{scale:2, useCORS:true, onclone:(doc)=>marcarVaciosClone(doc, vacios)},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css','legacy']}};
+  html2pdf().set(opt).from(document.body).outputPdf('blob').then(blob=>{
+    document.body.classList.remove('pdf-mode'); if(wiz) document.body.classList.add('wizard-on');
+    m.textContent=""; mostrarVistaPrevia(blob, fname);
+  }).catch(()=>{ document.body.classList.remove('pdf-mode'); if(wiz) document.body.classList.add('wizard-on'); m.textContent=""; alert("No se pudo generar el PDF."); });
+}
+function mostrarVistaPrevia(blob, fname){
+  const url=URL.createObjectURL(blob);
+  const ov=document.createElement('div'); ov.className='pdf-preview-ov';
+  ov.innerHTML=
+    '<div class="pdf-preview-box">'+
+      '<div class="pdf-preview-head"><b>Vista previa del PDF</b>'+
+        '<a href="'+url+'" target="_blank" class="hint" style="margin-left:auto">Abrir en pestaña ↗</a></div>'+
+      '<iframe src="'+url+'"></iframe>'+
+      '<div class="pdf-preview-actions">'+
+        '<button class="btn btn-ghost" onclick="cerrarVista(this)">Cancelar</button>'+
+        '<button class="btn btn-primary" id="pdfDlBtn">⬇️ Guardar PDF (para correo)</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(ov);
+  ov.querySelector('#pdfDlBtn').onclick=()=>{
+    const a=document.createElement('a'); a.href=url; a.download=fname; document.body.appendChild(a); a.click(); a.remove();
+  };
+}
+function cerrarVista(btn){ const ov=btn.closest('.pdf-preview-ov'); try{URL.revokeObjectURL(ov.querySelector('iframe').src);}catch(e){} ov.remove(); }
 
 load();
 loadMedia();
 updateGpsLink();
 markRequired(); updateProgress();
 fields().forEach(el=>el.addEventListener('input',updateProgress));
-initFirma('firmaTecnico','levantamiento_axium_firmaTec');
-initFirma('firmaCliente','levantamiento_axium_firmaCli');
+fields().forEach(el=>el.addEventListener('change',updateProgress));
 fields().forEach(el=>el.addEventListener('input',save));
 fields().forEach(el=>el.addEventListener('change',save));
+window.addEventListener('beforeprint', ()=>marcarVacios(true));
+window.addEventListener('afterprint', ()=>marcarVacios(false));
+
+/* ===== Wizard móvil: una sección por página ===== */
+let wzCur=0, wzCards=[];
+function isMobileWz(){ return window.matchMedia('(max-width:768px)').matches; }
+function setupWizard(){
+  wzCards = Array.from(document.querySelectorAll('.wrap > .card'));
+  if(isMobileWz()){
+    document.body.classList.add('wizard-on');
+    wzGo(Math.min(wzCur, wzCards.length-1));
+  } else {
+    document.body.classList.remove('wizard-on');
+    wzCards.forEach(c=>c.classList.remove('wstep-active'));
+  }
+}
+function wzGo(i){
+  if(!wzCards.length) return;
+  i=Math.max(0, Math.min(wzCards.length-1, i)); wzCur=i;
+  wzCards.forEach((c,idx)=>c.classList.toggle('wstep-active', idx===i));
+  const cnt=document.getElementById('wzCount'); if(cnt) cnt.textContent="Sección "+(i+1)+" de "+wzCards.length;
+  const prev=document.getElementById('wzPrev'); if(prev) prev.style.visibility = i===0 ? 'hidden':'visible';
+  const next=document.getElementById('wzNext');
+  if(next){
+    if(i===wzCards.length-1){ next.textContent="📄 Descargar PDF"; next.onclick=descargarPDF; }
+    else { next.textContent="Siguiente →"; next.onclick=()=>wzStep(1); }
+  }
+  window.scrollTo(0,0);
+}
+function wzStep(d){ wzGo(wzCur+d); }
+window.addEventListener('resize', setupWizard);
+setupWizard();
 </script>
 </body>
 </html>
