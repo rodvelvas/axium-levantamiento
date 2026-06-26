@@ -88,6 +88,7 @@
   body.wizard-on .wrap > .card{display:none;}
   body.wizard-on .wrap > .card.wstep-active{display:block;}
   body.wizard-on .actions, body.wizard-on .saved{display:none;}
+  body.wizard-on.wz-last .actions{display:flex;}
   .wizard-nav{position:fixed; bottom:0; left:0; right:0; background:#fff;
     border-top:1px solid var(--linea); padding:9px 14px; gap:10px; align-items:center;
     z-index:30; box-shadow:0 -2px 8px rgba(0,0,0,.07);}
@@ -374,6 +375,8 @@
   <div class="saved no-print" id="savedMsg"></div>
   <div class="actions no-print">
     <button class="btn btn-primary" onclick="descargarPDF()">📄 Descargar PDF (para correo)</button>
+    <button class="btn btn-ghost" onclick="exportarDatos()">⬇️ Datos para cotizador</button>
+    <button class="btn btn-danger" onclick="reiniciar()">🗑 Reiniciar</button>
   </div>
 
 </div>
@@ -682,10 +685,12 @@ function wzGo(i){
   wzCards.forEach((c,idx)=>c.classList.toggle('wstep-active', idx===i));
   const cnt=document.getElementById('wzCount'); if(cnt) cnt.textContent="Sección "+(i+1)+" de "+wzCards.length;
   const prev=document.getElementById('wzPrev'); if(prev) prev.style.visibility = i===0 ? 'hidden':'visible';
+  const last = (i===wzCards.length-1);
+  document.body.classList.toggle('wz-last', last);
   const next=document.getElementById('wzNext');
   if(next){
-    if(i===wzCards.length-1){ next.textContent="📄 Descargar PDF"; next.onclick=descargarPDF; }
-    else { next.textContent="Siguiente →"; next.onclick=()=>wzStep(1); }
+    if(last){ next.style.display='none'; }
+    else { next.style.display=''; next.textContent="Siguiente →"; next.onclick=()=>wzStep(1); }
   }
   window.scrollTo(0,0);
 }
